@@ -1,0 +1,37 @@
+group 'funcoding'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'application'
+
+mainClassName = 'funcoding.vrp.Solution'
+
+task wrapper(type: Wrapper) {
+	gradleVersion = '4.4'
+}
+
+run {
+	if (project.hasProperty("appArgs")) {
+		args Eval.me(appArgs)
+	}
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+jar {
+    baseName = 'vehicle-routing-problem'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'com.github.slugify', name: 'slugify', version: '2.2'
+    compile group: 'com.opencsv', name: 'opencsv', version: '4.1'
+    compile group: 'org.projectlombok', name: 'lombok', version: '1.16.18'
+    compile group: 'com.google.guava', name: 'guava', version: '19.0'
+
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
