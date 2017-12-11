@@ -1,4 +1,4 @@
-package funcoding.utils;
+package funcoding.vrp.utils;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -8,47 +8,33 @@ import com.github.slugify.Slugify;
 import com.opencsv.CSVReader;
 import com.opencsv.bean.CsvToBeanBuilder;
 
-import funcoding.model.Location;
-import funcoding.vrp.Solution;
+import funcoding.vrp.model.Location;
 
 public class Utils {
-
 	private static Slugify slg = new Slugify();
+	private static final int LIMIT_LOCATIONS = 12;
+	private static final int MAX_LOCATIONS = 25;
 
 	public static List<Location> getLocations(String filePrefix) throws IOException {
 		String filename = slg.slugify(filePrefix) + "_locations.csv";
-
 		List<Location> locations = new CsvToBeanBuilder(new FileReader(filename))
 				.withType(Location.class).build().parse();
-		return locations.subList(0, Solution.LIMIT_LOCATIONS);
+		return locations.subList(0, LIMIT_LOCATIONS);
 	}
 
-	// TODO: Exception handling
-	public static float[][] getDistances(String filePrefix, final int maxLocations) throws IOException {
-		float[][] distances = new float[maxLocations][maxLocations];
-		String filename = slg.slugify(filePrefix) + "_distances.csv";	// TODO: dynamic
-
+	public static float[][] getDistanceDurations(String filePrefix) throws IOException {
+		float[][] distances = new float[MAX_LOCATIONS][MAX_LOCATIONS];
+		String filename = slg.slugify(filePrefix) + "_distances.csv";
 		CSVReader csvReader = new CSVReader(new FileReader(filename));
 		String[] nextLine = csvReader.readNext();	// Hack: skipping first line
-		int x = 0, y  = 0;
-		float duration = 0.0f;	// TODO: Dynamic ?
-
+		int x, y;
+		float duration;
 		while ((nextLine = csvReader.readNext()) != null) {
 			x = Integer.parseInt(nextLine[0]);
 			y = Integer.parseInt(nextLine[1]);
 			duration = Float.parseFloat(nextLine[3]);
 			distances[x][y] = distances[y][x] = duration;
 		}
-
 		return distances;
-	}
-
-	public static float sum(float... numbers) {
-		float result = 0.0f;
-		for (int i = 0; i < numbers.length; i++) {
-			result += numbers[i];
-		}
-
-		return result;
 	}
 }

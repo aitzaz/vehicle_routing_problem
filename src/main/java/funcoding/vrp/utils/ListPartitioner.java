@@ -1,4 +1,4 @@
-package funcoding.utils;
+package funcoding.vrp.utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,29 +6,26 @@ import java.util.List;
 import com.google.common.primitives.Ints;
 
 public class ListPartitioner {
-
 	/**
 	 * Returns the set of all partitions for a given set
 	 * e.g for [1,2], it returns [[1],[2]] and [[1,2]]
 	 */
 	public static List<List<List<Integer>>> getAllPartitions(List<Integer> inputList) throws Exception {
 		int[] array = inputList.stream().mapToInt(i -> i).toArray();
-		int[][][] allPartitions = getAllPartitions(array);
-
-		List<List<List<Integer>>> partitions = new ArrayList<>();
-		for (int[][] level2 : allPartitions) {
-			List<List<Integer>> p2 = new ArrayList<>();
-			for (int[] level1 : level2) {
-				List<Integer> p1 = Ints.asList(level1);
-				p2.add(p1);
+		int[][][] partitionArrays = getAllPartitions(array);
+		List<List<List<Integer>>> partitionsList = new ArrayList<>();
+		for (int[][] partition : partitionArrays) {
+			List<List<Integer>> partitionSets = new ArrayList<>();
+			for (int[] set : partition) {
+				List<Integer> singleSet = Ints.asList(set);
+				partitionSets.add(singleSet);
 			}
-			partitions.add(p2);
+			partitionsList.add(partitionSets);
 		}
-
-		return partitions;
+		return partitionsList;
 	}
 
-	/*
+	/** Copied from following link:
 	 * https://stackoverflow.com/questions/36962150/partitions-of-a-set-storing-results-in-a-series-of-nested-lists
 	 */
 	private static int[][][] getAllPartitions(int[] array) throws Exception {

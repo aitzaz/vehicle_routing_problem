@@ -1,4 +1,4 @@
-package funcoding.model;
+package funcoding.vrp.model;
 
 import com.opencsv.bean.CsvBindByName;
 

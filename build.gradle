@@ -4,7 +4,7 @@ version '1.0-SNAPSHOT'
 apply plugin: 'java'
 apply plugin: 'application'
 
-mainClassName = 'funcoding.vrp.Solution'
+mainClassName = 'funcoding.vrp.program.Solution'
 
 task wrapper(type: Wrapper) {
 	gradleVersion = '4.4'
