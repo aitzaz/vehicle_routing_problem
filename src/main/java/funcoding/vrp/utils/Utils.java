@@ -12,7 +12,7 @@ import funcoding.vrp.model.Location;
 
 public class Utils {
 	private static Slugify slg = new Slugify();
-	private static final int LIMIT_LOCATIONS = 12;
+	private static final int LIMIT_LOCATIONS = 11;
 	private static final int MAX_LOCATIONS = 25;
 
 	public static List<Location> getLocations(String filePrefix) throws IOException {
