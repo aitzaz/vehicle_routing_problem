@@ -25,21 +25,22 @@ public class Solution {
  	private static float[][] distances;
 
 	public static void main(String[] args) throws Exception {
-		assert args.length != 2 : "Please provide file prefix and numVehicles arguments.";
+		assert args.length != 3 : "Please provide file prefix, numVehicles and locations limit arguments.";
 		String filePrefix = args[0];
 		int numVehicles = Integer.valueOf(args[1]);
+		int locationsLimit = Integer.valueOf(args[2]);
 		List<Location> locations = Utils.getLocations(filePrefix);
-		List<Integer> locationIds = locations.stream().map(Location::getId).collect(Collectors.toList());
+		List<Integer> locationIds = locations.stream().map(Location::getId).limit(locationsLimit).collect(Collectors.toList());
 		System.out.println("Location ids set: " + locationIds);
 		distances = Utils.getDistanceDurations(filePrefix);
 
 		long startTimeMillis = System.currentTimeMillis();
 		long beforeUsedMem = Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
 		Solution solution = new Solution();
-		List<List<Integer>> shortestRouteSet = solution.getShortestRouteWithPartitions(locationIds, numVehicles);
-		System.out.println("Solution time: " + TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeMillis) + " seconds");
+		List<List<Integer>> shortestRouteSet = solution.getShortestPartition(locationIds, numVehicles);
 		System.out.printf("Shortest route time: %.1f minutes\n", solution.maxLengthForRouteSet(shortestRouteSet));
 		System.out.println("Shortest route: " + shortestRouteSet);
+		System.out.println("Solution time: " + TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeMillis) + " seconds");
 		long afterUsedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 		long actualMemUsed = afterUsedMem - beforeUsedMem;
 		System.out.printf("MAX Memory used: %d MBs\n", (actualMemUsed / (1024 * 1024)));
@@ -52,10 +53,10 @@ public class Solution {
 	 * @param locationIds
 	 * @param partitions represents number of vehicles
 	 */
-	private List<List<Integer>> getShortestRouteWithPartitions(List<Integer> locationIds, int partitions) throws Exception {
-		List<List<List<Integer>>> allShortRoutesPerPartitions = allShortRoutesWithPartitions(locationIds, partitions);
+	private List<List<Integer>> getShortestPartition(List<Integer> locationIds, int partitions) throws Exception {
+		List<List<List<Integer>>> kPartitionsWithShortestRoutes = getK_PartitionsWithShortRoutes(locationIds, partitions);
 		Map<List<List<Integer>>, Float> partitionToMaxLengthMap = new HashMap<>();
-		for (List<List<Integer>> shortestRouteSetInPartition : allShortRoutesPerPartitions) {
+		for (List<List<Integer>> shortestRouteSetInPartition : kPartitionsWithShortestRoutes) {
 			partitionToMaxLengthMap.put(shortestRouteSetInPartition, maxLengthForRouteSet(shortestRouteSetInPartition));
 		}
 		List<List<Integer>> shortestRouteForPartitions = Collections.min(partitionToMaxLengthMap.entrySet(),
@@ -67,14 +68,11 @@ public class Solution {
 	 * Our partitions represent number of vehicles. This function yields
 	 * an optimal path for each vehicle given the destinations assigned to it
 	 */
-	private List<List<List<Integer>>> allShortRoutesWithPartitions(List<Integer> locationIds, int partitions) throws Exception {
+	private List<List<List<Integer>>> getK_PartitionsWithShortRoutes(List<Integer> locationIds, int partitions) throws Exception {
 		List<List<List<Integer>>> shortRoutesList = new ArrayList<>();
 		Integer depot = locationIds.get(0);
-		int[] inputSet = locationIds.subList(1, locationIds.size()).stream().mapToInt(Integer::intValue).toArray();;
+		int[] inputSet = locationIds.subList(1, locationIds.size()).stream().mapToInt(Integer::intValue).toArray();
 		int[][][] allPartitions = ListPartitioner.getAllPartitions(inputSet);
-		// Uncommenting following two lines will reduce memory footprint significantly by claiming unused objects
-//		System.gc();
-//		System.runFinalization();
 		Arrays.stream(allPartitions).filter(p -> p.length == partitions).forEach(p -> {
 			List<List<Integer>> shortestRouteWithCurrentPartitions = new ArrayList<>();
 			for (int[] q : p) {

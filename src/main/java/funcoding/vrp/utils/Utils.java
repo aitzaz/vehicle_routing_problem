@@ -12,14 +12,13 @@ import funcoding.vrp.model.Location;
 
 public class Utils {
 	private static Slugify slg = new Slugify();
-	private static final int LIMIT_LOCATIONS = 11;
 	private static final int MAX_LOCATIONS = 25;
 
 	public static List<Location> getLocations(String filePrefix) throws IOException {
 		String filename = slg.slugify(filePrefix) + "_locations.csv";
 		List<Location> locations = new CsvToBeanBuilder(new FileReader(filename))
 				.withType(Location.class).build().parse();
-		return locations.subList(0, LIMIT_LOCATIONS);
+		return locations;
 	}
 
 	public static float[][] getDistanceDurations(String filePrefix) throws IOException {

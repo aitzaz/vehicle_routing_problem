@@ -1,4 +1,4 @@
-# Translation of a Python brute-force solution for the Vehicle Routing Problem (VRP)
+# Translation of a [Python brute-force solution](https://github.com/ybashir/vrpfun) for the Vehicle Routing Problem (VRP)
 
 VRP is a generalized version of the Traveling Salesperson Problem (TSP): Given a depot, a set of delivery locations and the number of vehicles starting from the depot, we need to minimize the time (or travel distance) required to visit all locations.
 
@@ -17,10 +17,11 @@ Here is a sample plot of the starting input locations resulting from search quer
 
 Here is the output created after the algorithm has been run with 3 vehicles as input and 11 delivery locations:
 ```
-All location ids: [0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11]
-Solution time: 2 seconds
-Shortest route time: 66.2 minutes
-Shortest route: [[0, 1, 11, 9], [0, 5, 2, 10, 6], [0, 7, 4, 8]]
+Location ids set: [0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+Shortest route time: 72.3 minutes
+Shortest route: [[0, 7, 5, 11, 1], [0, 12, 2, 10, 6], [0, 4, 8, 9]]
+Solution time: 21 seconds
+MAX Memory used: 485 MBs
 ```
 ---
 
@@ -30,6 +31,6 @@ Here is Python Repo's [link](https://github.com/ybashir/vrpfun).
 
 To try the code, run following command in project's root directory (Note: it may take some time to download Gradle Wrapper):
 
-```./gradlew -q clean run -PappArgs="['sample', '3']"```
+```./gradlew -q clean run -PappArgs="['sample', '3', '12']"```
 
 Note: This code requires Java 8.
