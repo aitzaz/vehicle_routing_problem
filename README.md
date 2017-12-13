@@ -20,8 +20,8 @@ Here is the output created after the algorithm has been run with 3 vehicles as i
 Location ids set: [0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 Shortest route time: 72.3 minutes
 Shortest route: [[0, 7, 5, 11, 1], [0, 12, 2, 10, 6], [0, 4, 8, 9]]
-Solution time: 21 seconds
-MAX Memory used: 485 MBs
+Solution time: 25 seconds
+MAX Memory used: 342 MBs
 ```
 ---
 
@@ -31,6 +31,8 @@ Here is Python Repo's [link](https://github.com/ybashir/vrpfun).
 
 To try the code, run following command in project's root directory (Note: it may take some time to download Gradle Wrapper):
 
-```./gradlew -q clean run -PappArgs="['sample', '3', '12']"```
+```
+./gradlew -q clean run -PappArgs="['sample', '3', '12']"
+```
 
 Note: This code requires Java 8.

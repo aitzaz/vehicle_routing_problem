@@ -1,7 +1,10 @@
 package funcoding.vrp.program;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -9,12 +12,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import com.google.common.collect.Collections2;
 
 import funcoding.vrp.model.Location;
-import funcoding.vrp.utils.ListPartitioner;
+import funcoding.vrp.utils.PartitionIterable;
 import funcoding.vrp.utils.Utils;
 
 /**
@@ -31,19 +33,26 @@ public class Solution {
 		int locationsLimit = Integer.valueOf(args[2]);
 		List<Location> locations = Utils.getLocations(filePrefix);
 		List<Integer> locationIds = locations.stream().map(Location::getId).limit(locationsLimit).collect(Collectors.toList());
-		System.out.println("Location ids set: " + locationIds);
 		distances = Utils.getDistanceDurations(filePrefix);
 
 		long startTimeMillis = System.currentTimeMillis();
 		long beforeUsedMem = Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
 		Solution solution = new Solution();
 		List<List<Integer>> shortestRouteSet = solution.getShortestPartition(locationIds, numVehicles);
-		System.out.printf("Shortest route time: %.1f minutes\n", solution.maxLengthForRouteSet(shortestRouteSet));
-		System.out.println("Shortest route: " + shortestRouteSet);
-		System.out.println("Solution time: " + TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeMillis) + " seconds");
-		long afterUsedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-		long actualMemUsed = afterUsedMem - beforeUsedMem;
-		System.out.printf("MAX Memory used: %d MBs\n", (actualMemUsed / (1024 * 1024)));
+		try (PrintWriter out = new PrintWriter(
+				new BufferedWriter(new FileWriter("output.txt", true)))) {
+			out.println("Location ids set: " + locationIds + "; numVehicles: " + numVehicles);
+			out.printf("Shortest route time: %.1f minutes\n", solution.maxLengthForRouteSet(shortestRouteSet));
+			out.println("Shortest route: " + shortestRouteSet);
+			out.println("Solution time: " + TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeMillis) + " seconds");
+			long afterUsedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+			long actualMemUsed = afterUsedMem - beforeUsedMem;
+			out.printf("Peak memory usage: %d MBs\n\n", (actualMemUsed / (1024 * 1024)));
+		}
+		catch (IOException exception) {
+			exception.printStackTrace();
+			throw exception;
+		}
 	}
 
 	/**
@@ -71,14 +80,13 @@ public class Solution {
 	private List<List<List<Integer>>> getK_PartitionsWithShortRoutes(List<Integer> locationIds, int partitions) throws Exception {
 		List<List<List<Integer>>> shortRoutesList = new ArrayList<>();
 		Integer depot = locationIds.get(0);
-		int[] inputSet = locationIds.subList(1, locationIds.size()).stream().mapToInt(Integer::intValue).toArray();
-		int[][][] allPartitions = ListPartitioner.getAllPartitions(inputSet);
-		Arrays.stream(allPartitions).filter(p -> p.length == partitions).forEach(p -> {
+		Iterable<List<List<Integer>>> partitionIterable = new PartitionIterable<>(locationIds.subList(1, locationIds.size()), partitions);
+		partitionIterable.iterator().forEachRemaining(p -> {
 			List<List<Integer>> shortestRouteWithCurrentPartitions = new ArrayList<>();
-			for (int[] q : p) {
+			for (List<Integer> q : p) {
 				List<Integer> subPart = new ArrayList<>();
 				subPart.add(depot);
-				subPart.addAll(IntStream.of(q).boxed().collect(Collectors.toList()));
+				subPart.addAll(q);
 				List<List<Integer>> allRoutesInPartition = allRoutes(subPart);
 				List<Integer> shortestRoute = shortestRoute(allRoutesInPartition);
 				shortestRouteWithCurrentPartitions.add(shortestRoute);
