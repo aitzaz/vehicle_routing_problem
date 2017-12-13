@@ -1,6 +1,7 @@
 package funcoding.vrp.program;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import com.google.common.collect.Collections2;
 
@@ -28,15 +30,19 @@ public class Solution {
 		int numVehicles = Integer.valueOf(args[1]);
 		List<Location> locations = Utils.getLocations(filePrefix);
 		List<Integer> locationIds = locations.stream().map(Location::getId).collect(Collectors.toList());
-		System.out.println("All location ids: " + locationIds);
+		System.out.println("Location ids set: " + locationIds);
 		distances = Utils.getDistanceDurations(filePrefix);
 
 		long startTimeMillis = System.currentTimeMillis();
+		long beforeUsedMem = Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory();
 		Solution solution = new Solution();
 		List<List<Integer>> shortestRouteSet = solution.getShortestRouteWithPartitions(locationIds, numVehicles);
 		System.out.println("Solution time: " + TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTimeMillis) + " seconds");
 		System.out.printf("Shortest route time: %.1f minutes\n", solution.maxLengthForRouteSet(shortestRouteSet));
 		System.out.println("Shortest route: " + shortestRouteSet);
+		long afterUsedMem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+		long actualMemUsed = afterUsedMem - beforeUsedMem;
+		System.out.printf("MAX Memory used: %d MBs\n", (actualMemUsed / (1024 * 1024)));
 	}
 
 	/**
@@ -64,21 +70,23 @@ public class Solution {
 	private List<List<List<Integer>>> allShortRoutesWithPartitions(List<Integer> locationIds, int partitions) throws Exception {
 		List<List<List<Integer>>> shortRoutesList = new ArrayList<>();
 		Integer depot = locationIds.get(0);
-		List<List<List<Integer>>> allPartitions = ListPartitioner.getAllPartitions(locationIds.subList(1, locationIds.size()));
-		for (List<List<Integer>> p : allPartitions) {
-			if (p.size() == partitions) {
-				List<List<Integer>> shortestRouteWithCurrentPartitions = new ArrayList<>();
-				for (List<Integer> q : p) {
-					List<Integer> subPart = new ArrayList<>();
-					subPart.add(depot);
-					subPart.addAll(q);
-					List<List<Integer>> allRoutesInPartition = allRoutes(subPart);
-					List<Integer> shortestRoute = shortestRoute(allRoutesInPartition);
-					shortestRouteWithCurrentPartitions.add(shortestRoute);
-				}
-				shortRoutesList.add(shortestRouteWithCurrentPartitions);
+		int[] inputSet = locationIds.subList(1, locationIds.size()).stream().mapToInt(Integer::intValue).toArray();;
+		int[][][] allPartitions = ListPartitioner.getAllPartitions(inputSet);
+		// Uncommenting following two lines will reduce memory footprint significantly by claiming unused objects
+//		System.gc();
+//		System.runFinalization();
+		Arrays.stream(allPartitions).filter(p -> p.length == partitions).forEach(p -> {
+			List<List<Integer>> shortestRouteWithCurrentPartitions = new ArrayList<>();
+			for (int[] q : p) {
+				List<Integer> subPart = new ArrayList<>();
+				subPart.add(depot);
+				subPart.addAll(IntStream.of(q).boxed().collect(Collectors.toList()));
+				List<List<Integer>> allRoutesInPartition = allRoutes(subPart);
+				List<Integer> shortestRoute = shortestRoute(allRoutesInPartition);
+				shortestRouteWithCurrentPartitions.add(shortestRoute);
 			}
-		}
+			shortRoutesList.add(shortestRouteWithCurrentPartitions);
+		});
 		return shortRoutesList;
 	}
 
